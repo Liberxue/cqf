@@ -2,6 +2,7 @@ extern crate cqf;
 
 use cqf::models::black_scholes::BlackScholesModel;
 use cqf::strategies::single_leg::SingleLegOption;
+use cqf::strategies::OptionStrategy;
 
 #[test]
 fn test_single_leg_call() {
@@ -11,8 +12,9 @@ fn test_single_leg_call() {
     let r = 0.05;
     let sigma = 0.2;
     let t = 1.0;
-    let call_price = SingleLegOption::call(&model, s, k, r, sigma, t);
-    assert!((call_price - 10.45).abs() < 0.1); 
+    let single_leg_call = SingleLegOption::new(&model, s, k, r, sigma, t, true);
+    let price = single_leg_call.price();
+    assert!((price - 10.45).abs() < 0.1);
 }
 
 #[test]
@@ -23,7 +25,8 @@ fn test_single_leg_put() {
     let r = 0.05;
     let sigma = 0.2;
     let t = 1.0;
-    let put_price = SingleLegOption::put(&model, s, k, r, sigma, t);
-    assert!((put_price - 5.57).abs() < 0.1);
+    let single_leg_put = SingleLegOption::new(&model, s, k, r, sigma, t, false);
+    let price = single_leg_put.price();
+    assert!((price - 5.57).abs() < 0.1); 
 }
 
