@@ -1,7 +1,7 @@
-extern crate cqf;
+extern crate core;
 
-use cqf::core::models::monte_carlo::MonteCarloModel;
-use cqf::core::models::OptionPricingModel;
+use core::models::monte_carlo::MonteCarloModel;
+use core::models::OptionPricingModel;
 
 #[test]
 fn test_monte_carlo_european_call() {

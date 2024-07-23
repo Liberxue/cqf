@@ -1,8 +1,8 @@
-extern crate cqf;
+extern crate core;
 
-use cqf::core::models::black_scholes::BlackScholesModel;
-use cqf::core::strategies::single_leg::SingleLegOption;
-use cqf::core::strategies::OptionStrategy;
+use core::models::black_scholes::BlackScholesModel;
+use core::strategies::single_leg::SingleLegOption;
+use core::strategies::OptionStrategy;
 
 #[test]
 fn test_single_leg_call() {

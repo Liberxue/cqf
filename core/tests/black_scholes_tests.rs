@@ -1,7 +1,7 @@
-extern crate cqf;
+extern crate core;
 
-use cqf::core::models::black_scholes::BlackScholesModel;
-use cqf::core::models::OptionPricingModel;
+use core::models::black_scholes::BlackScholesModel;
+use core::models::OptionPricingModel;
 
 #[test]
 fn test_black_scholes_call() {

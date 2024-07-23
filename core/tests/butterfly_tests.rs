@@ -1,8 +1,8 @@
-extern crate cqf;
+extern crate core;
 
-use cqf::core::models::black_scholes::BlackScholesModel;
-use cqf::core::strategies::butterfly::ButterflySpread;
-use cqf::core::strategies::OptionStrategy;
+use core::models::black_scholes::BlackScholesModel;
+use core::strategies::butterfly::ButterflySpread;
+use core::strategies::OptionStrategy;
 
 #[test]
 fn test_butterfly_spread() {

@@ -1,8 +1,7 @@
-extern crate cqf;
-
-use cqf::core::models::black_scholes::BlackScholesModel;
-use cqf::core::strategies::dance::Dance;
-use cqf::core::strategies::OptionStrategy;
+extern crate core;
+use core::models::black_scholes::BlackScholesModel;
+use core::strategies::dance::Dance;
+use core::strategies::OptionStrategy;
 
 #[test]
 fn test_dance() {
