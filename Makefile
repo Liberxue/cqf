@@ -12,7 +12,7 @@ fmt:
 # unit Test
 test:
 	@export RUST_LOG=info
-	@cargo test -v 
+	@cargo test -v &&  cargo test --workspace
 
 .PHONY: build
 # cargo build

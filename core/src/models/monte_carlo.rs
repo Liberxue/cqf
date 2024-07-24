@@ -93,4 +93,24 @@ impl OptionPricingModel for MonteCarloModel {
         // Calculate the average payoff and discount it to present value
         (payoff_sum / self.simulations as f64) * (-r * t).exp()
     }
+
+    fn delta(&self, s: f64, k: f64, r: f64, sigma: f64, t: f64) -> f64 {
+        0.0
+    }
+
+    fn gamma(&self, s: f64, k: f64, r: f64, sigma: f64, t: f64) -> f64 {
+        0.0
+    }
+
+    fn vega(&self, s: f64, k: f64, r: f64, sigma: f64, t: f64) -> f64 {
+        0.0
+    }
+
+    fn theta(&self, s: f64, k: f64, r: f64, sigma: f64, t: f64) -> f64 {
+        0.0
+    }
+
+    fn rho(&self, s: f64, k: f64, r: f64, sigma: f64, t: f64) -> f64 {
+        0.0
+    }
 }
