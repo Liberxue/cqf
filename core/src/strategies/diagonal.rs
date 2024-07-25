@@ -1,44 +1,19 @@
-use crate::models::OptionPricingModel;
+use crate::models::{OptionParameters, OptionPricingModel};
 use crate::strategies::OptionStrategy;
 
 /// Represents a `DiagonalSpread` option strategy.
 ///
 /// The `DiagonalSpread` strategy involves buying and selling call options with different strike prices and different expiration dates.
 /// This strategy aims to benefit from the changes in the underlying asset's price and time decay, and is commonly used to capture price movements while managing risk.
-///
-/// # Fields
-/// - `model`: The option pricing model used to price the call options.
-/// - `s`: The current price of the underlying asset.
-/// - `k1`: The strike price of the short (near-term) call option.
-/// - `k2`: The strike price of the long (far-term) call option.
-/// - `r`: The risk-free interest rate (annualized).
-/// - `sigma`: The volatility of the underlying asset (annualized).
-/// - `t1`: The time to maturity of the short (near-term) call option (in years).
-/// - `t2`: The time to maturity of the long (far-term) call option (in years).
 pub struct DiagonalSpread<'a, T: OptionPricingModel> {
     /// The option pricing model used to price the call options.
     pub model: &'a T,
 
-    /// The current price of the underlying asset.
-    pub s: f64,
+    /// The parameters for the short (near-term) call option.
+    pub near_params: OptionParameters,
 
-    /// The strike price of the short (near-term) call option.
-    pub k1: f64,
-
-    /// The strike price of the long (far-term) call option.
-    pub k2: f64,
-
-    /// The risk-free interest rate (annualized).
-    pub r: f64,
-
-    /// The volatility of the underlying asset (annualized).
-    pub sigma: f64,
-
-    /// The time to maturity of the short (near-term) call option (in years).
-    pub t1: f64,
-
-    /// The time to maturity of the long (far-term) call option (in years).
-    pub t2: f64,
+    /// The parameters for the long (far-term) call option.
+    pub far_params: OptionParameters,
 }
 
 impl<'a, T: OptionPricingModel> DiagonalSpread<'a, T> {
@@ -47,36 +22,17 @@ impl<'a, T: OptionPricingModel> DiagonalSpread<'a, T> {
     /// # Arguments
     ///
     /// * `model` - The option pricing model to be used.
-    /// * `s` - The current price of the underlying asset.
-    /// * `k1` - The strike price of the short (near-term) call option.
-    /// * `k2` - The strike price of the long (far-term) call option.
-    /// * `r` - The risk-free interest rate.
-    /// * `sigma` - The volatility of the underlying asset.
-    /// * `t1` - The time to maturity of the short (near-term) call option.
-    /// * `t2` - The time to maturity of the long (far-term) call option.
+    /// * `near_params` - The parameters for the short (near-term) call option.
+    /// * `far_params` - The parameters for the long (far-term) call option.
     ///
     /// # Returns
     ///
     /// Returns a new instance of `DiagonalSpread`.
-    pub fn new(
-        model: &'a T,
-        s: f64,
-        k1: f64,
-        k2: f64,
-        r: f64,
-        sigma: f64,
-        t1: f64,
-        t2: f64,
-    ) -> Self {
+    pub fn new(model: &'a T, near_params: OptionParameters, far_params: OptionParameters) -> Self {
         Self {
             model,
-            s,
-            k1,
-            k2,
-            r,
-            sigma,
-            t1,
-            t2,
+            near_params,
+            far_params,
         }
     }
 }
@@ -104,22 +60,32 @@ impl<'a, T: OptionPricingModel> OptionStrategy for DiagonalSpread<'a, T> {
     ///
     /// # Example
     ///
-    /// use crate::models::BlackScholesModel;
+    /// use crate::models::{BlackScholesModel, OptionParameters};
     /// use crate::strategies::DiagonalSpread;
     /// let model = BlackScholesModel;
-    /// let diagonal_spread = DiagonalSpread::new(&model, 100.0, 90.0, 110.0, 0.05, 0.2, 0.1, 0.5);
+    /// let near_params = OptionParameters {
+    ///     s: 100.0,
+    ///     k: 90.0,
+    ///     r: 0.05,
+    ///     sigma: 0.2,
+    ///     t: 0.1,
+    /// };
+    /// let far_params = OptionParameters {
+    ///     s: 100.0,
+    ///     k: 110.0,
+    ///     r: 0.05,
+    ///     sigma: 0.2,
+    ///     t: 0.5,
+    /// };
+    /// let diagonal_spread = DiagonalSpread::new(&model, near_params, far_params);
     /// let price = diagonal_spread.price();
     /// println!("Diagonal Spread Price: {}", price);
     fn price(&self) -> f64 {
-        // Calculate the price of the near-term (short) call option with strike price `k1` and time to maturity `t1`.
-        let near_leg = self
-            .model
-            .call_price(self.s, self.k1, self.r, self.sigma, self.t1);
+        // Calculate the price of the near-term (short) call option.
+        let near_leg = self.model.call_price(&self.near_params);
 
-        // Calculate the price of the far-term (long) call option with strike price `k2` and time to maturity `t2`.
-        let far_leg = self
-            .model
-            .call_price(self.s, self.k2, self.r, self.sigma, self.t2);
+        // Calculate the price of the far-term (long) call option.
+        let far_leg = self.model.call_price(&self.far_params);
 
         // The total price of the Diagonal Spread strategy is the difference between the long and short call option prices.
         far_leg - near_leg

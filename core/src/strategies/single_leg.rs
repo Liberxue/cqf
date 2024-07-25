@@ -1,4 +1,4 @@
-use crate::models::OptionPricingModel;
+use crate::models::{OptionParameters, OptionPricingModel};
 use crate::strategies::OptionStrategy;
 
 /// Represents a single leg of an option (either a call or a put).
@@ -18,20 +18,8 @@ pub struct SingleLegOption<'a, T: OptionPricingModel> {
     /// The option pricing model used to price the option.
     pub model: &'a T,
 
-    /// The current price of the underlying asset.
-    pub s: f64,
-
-    /// The strike price of the option.
-    pub k: f64,
-
-    /// The risk-free interest rate (annualized).
-    pub r: f64,
-
-    /// The volatility of the underlying asset (annualized).
-    pub sigma: f64,
-
-    /// The time to maturity of the option (in years).
-    pub t: f64,
+    /// The parameters for the option.
+    pub params: OptionParameters,
 
     /// A boolean flag indicating whether the option is a call (`true`) or a put (`false`).
     pub is_call: bool,
@@ -43,24 +31,16 @@ impl<'a, T: OptionPricingModel> SingleLegOption<'a, T> {
     /// # Arguments
     ///
     /// * `model` - The option pricing model to be used.
-    /// * `s` - The current price of the underlying asset.
-    /// * `k` - The strike price of the option.
-    /// * `r` - The risk-free interest rate.
-    /// * `sigma` - The volatility of the underlying asset.
-    /// * `t` - The time to maturity of the option.
+    /// * `params` - The parameters for the option.
     /// * `is_call` - A boolean flag indicating whether the option is a call (`true`) or a put (`false`).
     ///
     /// # Returns
     ///
-    /// Returns a new in stance of `SingleLegOption`.
-    pub fn new(model: &'a T, s: f64, k: f64, r: f64, sigma: f64, t: f64, is_call: bool) -> Self {
+    /// Returns a new instance of `SingleLegOption`.
+    pub fn new(model: &'a T, params: OptionParameters, is_call: bool) -> Self {
         Self {
             model,
-            s,
-            k,
-            r,
-            sigma,
-            t,
+            params,
             is_call,
         }
     }
@@ -78,22 +58,34 @@ impl<'a, T: OptionPricingModel> OptionStrategy for SingleLegOption<'a, T> {
     ///
     /// # Example
     ///
-    /// use crate::models::BlackScholesModel;
+    /// use crate::models::{BlackScholesModel, OptionParameters};
     /// use crate::strategies::SingleLegOption;
     /// let model = BlackScholesModel;
-    /// let call_option = SingleLegOption::new(&model, 100.0,  105.0, 0.05, 0.2, 1.0, true);
-    /// let put_option = SingleLegOption::new(&model, 100.0, 95.0, 0.05, 0.2, 1.0, false);
+    /// let params_call = OptionParameters {
+    ///     s: 100.0,
+    ///     k: 105.0,
+    ///     r: 0.05,
+    ///     sigma: 0.2,
+    ///     t: 1.0,
+    /// };
+    /// let params_put = OptionParameters {
+    ///     s: 100.0,
+    ///     k: 95.0,
+    ///     r: 0.05,
+    ///     sigma: 0.2,
+    ///     t: 1.0,
+    /// };
+    /// let call_option = SingleLegOption::new(&model, params_call, true);
+    /// let put_option = SingleLegOption::new(&model, params_put, false);
     /// let call_price = call_option.price();
     /// let put_price = put_option.price();
     /// println!("Call Option Price: {}", call_price);
     /// println!("Put Option Price: {}", put_price);
     fn price(&self) -> f64 {
         if self.is_call {
-            self.model
-                .call_price(self.s, self.k, self.r, self.sigma, self.t)
+            self.model.call_price(&self.params)
         } else {
-            self.model
-                .put_price(self.s, self.k, self.r, self.sigma, self.t)
+            self.model.put_price(&self.params)
         }
     }
 }

@@ -1,4 +1,4 @@
-use crate::models::OptionPricingModel;
+use crate::models::{OptionParameters, OptionPricingModel};
 use crate::strategies::OptionStrategy;
 
 /// Represents a straddle option strategy.
@@ -17,20 +17,8 @@ pub struct Straddle<'a, T: OptionPricingModel> {
     /// The option pricing model used to price the options.
     pub model: &'a T,
 
-    /// The current price of the underlying asset.
-    pub s: f64,
-
-    /// The strike price of both the call and put options.
-    pub k: f64,
-
-    /// The risk-free interest rate (annualized).
-    pub r: f64,
-
-    /// The volatility of the underlying asset (annualized).
-    pub sigma: f64,
-
-    /// The time to maturity of the options (in years).
-    pub t: f64,
+    /// The parameters for the options.
+    pub params: OptionParameters,
 }
 
 impl<'a, T: OptionPricingModel> Straddle<'a, T> {
@@ -39,24 +27,13 @@ impl<'a, T: OptionPricingModel> Straddle<'a, T> {
     /// # Arguments
     ///
     /// * `model` - The option pricing model to be used.
-    /// * `s` - The current price of the underlying asset.
-    /// * `k` - The strike price of both the call and put options.
-    /// * `r` - The risk-free interest rate.
-    /// * `sigma` - The volatility of the underlying asset.
-    /// * `t` - The time to maturity of the options.
+    /// * `params` - The parameters for the options.
     ///
     /// # Returns
     ///
     /// Returns a new instance of `Straddle`.
-    pub fn new(model: &'a T, s: f64, k: f64, r: f64, sigma: f64, t: f64) -> Self {
-        Self {
-            model,
-            s,
-            k,
-            r,
-            sigma,
-            t,
-        }
+    pub fn new(model: &'a T, params: OptionParameters) -> Self {
+        Self { model, params }
     }
 }
 
@@ -71,19 +48,22 @@ impl<'a, T: OptionPricingModel> OptionStrategy for Straddle<'a, T> {
     ///
     /// # Example
     ///
-    /// use crate::models::BlackScholesModel;
+    /// use crate::models::{BlackScholesModel, OptionParameters};
     /// use crate::strategies::Straddle;
     /// let model = BlackScholesModel;
-    /// let straddle = Straddle::new(&model, 100.0, 100.0, 0.05, 0.2, 1.0);
+    /// let params = OptionParameters {
+    ///     s: 100.0,
+    ///     k: 100.0,
+    ///     r: 0.05,
+    ///     sigma: 0.2,
+    ///     t: 1.0,
+    /// };
+    /// let straddle = Straddle::new(&model, params);
     /// let straddle_price = straddle.price();
     /// println!("Straddle Price: {}", straddle_price);
     fn price(&self) -> f64 {
-        let call_price = self
-            .model
-            .call_price(self.s, self.k, self.r, self.sigma, self.t);
-        let put_price = self
-            .model
-            .put_price(self.s, self.k, self.r, self.sigma, self.t);
+        let call_price = self.model.call_price(&self.params);
+        let put_price = self.model.put_price(&self.params);
         call_price + put_price
     }
 }

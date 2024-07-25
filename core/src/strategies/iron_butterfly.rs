@@ -1,4 +1,4 @@
-use crate::models::OptionPricingModel;
+use crate::models::{OptionParameters, OptionPricingModel};
 use crate::strategies::OptionStrategy;
 
 /// Represents an `IronButterfly` option strategy.
@@ -10,40 +10,18 @@ use crate::strategies::OptionStrategy;
 /// - A short (near-term) put option with strike price `k2` (center strike).
 /// - A long call option with strike price `k3` (higher strike).
 /// - A long put option with strike price `k1` (lower strike).
-///
-/// # Fields
-/// - `model`: The option pricing model used to price the options.
-/// - `s`: The current price of the underlying asset.
-/// - `k1`: The strike price of the long (lower strike) put option.
-/// - `k2`: The strike price of the short (center strike) call and put options.
-/// - `k3`: The strike price of the long (higher strike) call option.
-/// - `r`: The risk-free interest rate (annualized).
-/// - `sigma`: The volatility of the underlying asset (annualized).
-/// - `t`: The time to maturity of all options (in years).
 pub struct IronButterfly<'a, T: OptionPricingModel> {
     /// The option pricing model used to price the options.
     pub model: &'a T,
 
-    /// The current price of the underlying asset.
-    pub s: f64,
+    /// The parameters for the long (lower strike) put option.
+    pub params1: OptionParameters,
 
-    /// The strike price of the long (lower strike) put option.
-    pub k1: f64,
+    /// The parameters for the short (center strike) call and put options.
+    pub params2: OptionParameters,
 
-    /// The strike price of the short (center strike) call and put options.
-    pub k2: f64,
-
-    /// The strike price of the long (higher strike) call option.
-    pub k3: f64,
-
-    /// The risk-free interest rate (annualized).
-    pub r: f64,
-
-    /// The volatility of the underlying asset (annualized).
-    pub sigma: f64,
-
-    /// The time to maturity of all options (in years).
-    pub t: f64,
+    /// The parameters for the long (higher strike) call option.
+    pub params3: OptionParameters,
 }
 
 impl<'a, T: OptionPricingModel> IronButterfly<'a, T> {
@@ -52,36 +30,24 @@ impl<'a, T: OptionPricingModel> IronButterfly<'a, T> {
     /// # Arguments
     ///
     /// * `model` - The option pricing model to be used.
-    /// * `s` - The current price of the underlying asset.
-    /// * `k1` - The strike price of the long (lower strike) put option.
-    /// * `k2` - The strike price of the short (center strike) call and put options.
-    /// * `k3` - The strike price of the long (higher strike) call option.
-    /// * `r` - The risk-free interest rate.
-    /// * `sigma` - The volatility of the underlying asset.
-    /// * `t` - The time to maturity of all options.
+    /// * `params1` - The parameters for the long (lower strike) put option.
+    /// * `params2` - The parameters for the short (center strike) call and put options.
+    /// * `params3` - The parameters for the long (higher strike) call option.
     ///
     /// # Returns
     ///
     /// Returns a new instance of `IronButterfly`.
     pub fn new(
         model: &'a T,
-        s: f64,
-        k1: f64,
-        k2: f64,
-        k3: f64,
-        r: f64,
-        sigma: f64,
-        t: f64,
+        params1: OptionParameters,
+        params2: OptionParameters,
+        params3: OptionParameters,
     ) -> Self {
         Self {
             model,
-            s,
-            k1,
-            k2,
-            k3,
-            r,
-            sigma,
-            t,
+            params1,
+            params2,
+            params3,
         }
     }
 }
@@ -90,10 +56,10 @@ impl<'a, T: OptionPricingModel> OptionStrategy for IronButterfly<'a, T> {
     /// Calculates the price of the `IronButterfly` option strategy.
     ///
     /// The `IronButterfly` strategy is composed of four legs:
-    /// - A short (center strike) call option with strike price `k2`.
-    /// - A short (center strike) put option with strike price `k2`.
-    /// - A long call option with strike price `k3`.
-    /// - A long put option with strike price `k1`.
+    /// - A short (center strike) call option with strike price `params2.k`.
+    /// - A short (center strike) put option with strike price `params2.k`.
+    /// - A long call option with strike price `params3.k`.
+    /// - A long put option with strike price `params1.k`.
     ///
     /// The price of the strategy is calculated as:
     ///
@@ -113,32 +79,45 @@ impl<'a, T: OptionPricingModel> OptionStrategy for IronButterfly<'a, T> {
     ///
     /// # Example
     ///
-    /// use crate::models::BlackScholesModel;
+    /// use crate::models::{BlackScholesModel, OptionParameters};
     /// use crate::strategies::IronButterfly;
     /// let model = BlackScholesModel;
-    /// let iron_butterfly = IronButterfly::new(&model, 100.0, 95.0, 100.0, 105.0, 0.05, 0.2, 0.5);
+    /// let params1 = OptionParameters {
+    ///     s: 100.0,
+    ///     k: 95.0,
+    ///     r: 0.05,
+    ///     sigma: 0.2,
+    ///     t: 0.5,
+    /// };
+    /// let params2 = OptionParameters {
+    ///     s: 100.0,
+    ///     k: 100.0,
+    ///     r: 0.05,
+    ///     sigma: 0.2,
+    ///     t: 0.5,
+    /// };
+    /// let params3 = OptionParameters {
+    ///     s: 100.0,
+    ///     k: 105.0,
+    ///     r: 0.05,
+    ///     sigma: 0.2,
+    ///     t: 0.5,
+    /// };
+    /// let iron_butterfly = IronButterfly::new(&model, params1, params2, params3);
     /// let price = iron_butterfly.price();
     /// println!("Iron Butterfly Price: {}", price);
     fn price(&self) -> f64 {
-        // Calculate the price of the short (center strike) call option with strike price `k2`.
-        let call_price = self
-            .model
-            .call_price(self.s, self.k2, self.r, self.sigma, self.t);
+        // Calculate the price of the short (center strike) call option with strike price `params2.k`.
+        let call_price = self.model.call_price(&self.params2);
 
-        // Calculate the price of the short (center strike) put option with strike price `k2`.
-        let put_price = self
-            .model
-            .put_price(self.s, self.k2, self.r, self.sigma, self.t);
+        // Calculate the price of the short (center strike) put option with strike price `params2.k`.
+        let put_price = self.model.put_price(&self.params2);
 
-        // Calculate the price of the long (higher strike) call option with strike price `k3`.
-        let long_call_price = self
-            .model
-            .call_price(self.s, self.k3, self.r, self.sigma, self.t);
+        // Calculate the price of the long (higher strike) call option with strike price `params3.k`.
+        let long_call_price = self.model.call_price(&self.params3);
 
-        // Calculate the price of the long (lower strike) put option with strike price `k1`.
-        let long_put_price = self
-            .model
-            .put_price(self.s, self.k1, self.r, self.sigma, self.t);
+        // Calculate the price of the long (lower strike) put option with strike price `params1.k`.
+        let long_put_price = self.model.put_price(&self.params1);
 
         // The total price of the Iron Butterfly strategy is the sum of the prices of the short options minus the prices of the long options.
         call_price + put_price - long_call_price - long_put_price

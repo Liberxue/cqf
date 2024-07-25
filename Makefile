@@ -8,6 +8,12 @@ init:
 fmt:
 	@cargo fmt -v 
 
+.PHONY:cli
+# cargo cli
+cli:
+	@cargo build
+	@cargo run --bin cli
+
 .PHONY:unitTest
 # unit Test
 test:

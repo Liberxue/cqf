@@ -1,4 +1,4 @@
-use crate::models::OptionPricingModel;
+use crate::models::{OptionParameters, OptionPricingModel};
 use crate::strategies::OptionStrategy;
 
 /// Represents an `IronCondor` option strategy.
@@ -9,44 +9,21 @@ use crate::strategies::OptionStrategy;
 /// - A long call option with strike price `k3` (higher call strike).
 /// - A short put option with strike price `k1` (lower put strike).
 /// - A long put option with strike price `k4` (higher put strike).
-///
-/// # Fields
-/// - `model`: The option pricing model used to price the options.
-/// - `s`: The current price of the underlying asset.
-/// - `k1`: The strike price of the long put option (lower strike).
-/// - `k2`: The strike price of the short put option (center strike).
-/// - `k3`: The strike price of the short call option (center strike).
-/// - `k4`: The strike price of the long call option (higher strike).
-/// - `r`: The risk-free interest rate (annualized).
-/// - `sigma`: The volatility of the underlying asset (annualized).
-/// - `t`: The time to maturity of all options (in years).
 pub struct IronCondor<'a, T: OptionPricingModel> {
     /// The option pricing model used to price the options.
     pub model: &'a T,
 
-    /// The current price of the underlying asset.
-    pub s: f64,
+    /// The parameters for the long put option (lower strike).
+    pub params1: OptionParameters,
 
-    /// The strike price of the long put option (lower strike).
-    pub k1: f64,
+    /// The parameters for the short put option (center strike).
+    pub params2: OptionParameters,
 
-    /// The strike price of the short put option (center strike).
-    pub k2: f64,
+    /// The parameters for the short call option (center strike).
+    pub params3: OptionParameters,
 
-    /// The strike price of the short call option (center strike).
-    pub k3: f64,
-
-    /// The strike price of the long call option (higher strike).
-    pub k4: f64,
-
-    /// The risk-free interest rate (annualized).
-    pub r: f64,
-
-    /// The volatility of the underlying asset (annualized).
-    pub sigma: f64,
-
-    /// The time to maturity of all options (in years).
-    pub t: f64,
+    /// The parameters for the long call option (higher strike).
+    pub params4: OptionParameters,
 }
 
 impl<'a, T: OptionPricingModel> IronCondor<'a, T> {
@@ -55,39 +32,27 @@ impl<'a, T: OptionPricingModel> IronCondor<'a, T> {
     /// # Arguments
     ///
     /// * `model` - The option pricing model to be used.
-    /// * `s` - The current price of the underlying asset.
-    /// * `k1` - The strike price of the long put option (lower strike).
-    /// * `k2` - The strike price of the short put option (center strike).
-    /// * `k3` - The strike price of the short call option (center strike).
-    /// * `k4` - The strike price of the long call option (higher strike).
-    /// * `r` - The risk-free interest rate.
-    /// * `sigma` - The volatility of the underlying asset.
-    /// * `t` - The time to maturity of all options.
+    /// * `params1` - The parameters for the long put option (lower strike).
+    /// * `params2` - The parameters for the short put option (center strike).
+    /// * `params3` - The parameters for the short call option (center strike).
+    /// * `params4` - The parameters for the long call option (higher strike).
     ///
     /// # Returns
     ///
     /// Returns a new instance of `IronCondor`.
     pub fn new(
         model: &'a T,
-        s: f64,
-        k1: f64,
-        k2: f64,
-        k3: f64,
-        k4: f64,
-        r: f64,
-        sigma: f64,
-        t: f64,
+        params1: OptionParameters,
+        params2: OptionParameters,
+        params3: OptionParameters,
+        params4: OptionParameters,
     ) -> Self {
         Self {
             model,
-            s,
-            k1,
-            k2,
-            k3,
-            k4,
-            r,
-            sigma,
-            t,
+            params1,
+            params2,
+            params3,
+            params4,
         }
     }
 }
@@ -96,10 +61,10 @@ impl<'a, T: OptionPricingModel> OptionStrategy for IronCondor<'a, T> {
     /// Calculates the price of the `IronCondor` option strategy.
     ///
     /// The `IronCondor` strategy is composed of four legs:
-    /// - A short call option with strike price `k3`.
-    /// - A long call option with strike price `k4`.
-    /// - A short put option with strike price `k2`.
-    /// - A long put option with strike price `k1`.
+    /// - A short call option with strike price `params3.k`.
+    /// - A long call option with strike price `params4.k`.
+    /// - A short put option with strike price `params2.k`.
+    /// - A long put option with strike price `params1.k`.
     ///
     /// The price of the strategy is calculated as:
     ///
@@ -108,10 +73,10 @@ impl<'a, T: OptionPricingModel> OptionStrategy for IronCondor<'a, T> {
     /// \]
     ///
     /// Where:
-    /// - \( P_{\text{short}} \) is the price of the short put option with strike price `k2`,
-    /// - \( P_{\text{long}} \) is the price of the long put option with strike price `k1`,
-    /// - \( C_{\text{short}} \) is the price of the short call option with strike price `k3`,
-    /// - \( C_{\text{long}} \) is the price of the long call option with strike price `k4`.
+    /// - \( P_{\text{short}} \) is the price of the short put option with strike price `params2.k`,
+    /// - \( P_{\text{long}} \) is the price of the long put option with strike price `params1.k`,
+    /// - \( C_{\text{short}} \) is the price of the short call option with strike price `params3.k`,
+    /// - \( C_{\text{long}} \) is the price of the long call option with strike price `params4.k`.
     ///
     /// # Returns
     ///
@@ -119,32 +84,52 @@ impl<'a, T: OptionPricingModel> OptionStrategy for IronCondor<'a, T> {
     ///
     /// # Example
     ///
-    /// use crate::models::BlackScholesModel;
+    /// use crate::models::{BlackScholesModel, OptionParameters};
     /// use crate::strategies::IronCondor;
     /// let model = BlackScholesModel;
-    /// let iron_condor = IronCondor::new(&model, 100.0, 90.0, 95.0, 105.0, 110.0, 0.05, 0.2, 0.5);
+    /// let params1 = OptionParameters {
+    ///     s: 100.0,
+    ///     k: 90.0,
+    ///     r: 0.05,
+    ///     sigma: 0.2,
+    ///     t: 0.5,
+    /// };
+    /// let params2 = OptionParameters {
+    ///     s: 100.0,
+    ///     k: 95.0,
+    ///     r: 0.05,
+    ///     sigma: 0.2,
+    ///     t: 0.5,
+    /// };
+    /// let params3 = OptionParameters {
+    ///     s: 100.0,
+    ///     k: 105.0,
+    ///     r: 0.05,
+    ///     sigma: 0.2,
+    ///     t: 0.5,
+    /// };
+    /// let params4 = OptionParameters {
+    ///     s: 100.0,
+    ///     k: 110.0,
+    ///     r: 0.05,
+    ///     sigma: 0.2,
+    ///     t: 0.5,
+    /// };
+    /// let iron_condor = IronCondor::new(&model, params1, params2, params3, params4);
     /// let price = iron_condor.price();
     /// println!("Iron Condor Price: {}", price);
     fn price(&self) -> f64 {
-        // Calculate the price of the short put option with strike price `k2`.
-        let put_price1 = self
-            .model
-            .put_price(self.s, self.k2, self.r, self.sigma, self.t);
+        // Calculate the price of the short put option with strike price `params2.k`.
+        let put_price1 = self.model.put_price(&self.params2);
 
-        // Calculate the price of the long put option with strike price `k1`.
-        let put_price2 = self
-            .model
-            .put_price(self.s, self.k1, self.r, self.sigma, self.t);
+        // Calculate the price of the long put option with strike price `params1.k`.
+        let put_price2 = self.model.put_price(&self.params1);
 
-        // Calculate the price of the short call option with strike price `k3`.
-        let call_price1 = self
-            .model
-            .call_price(self.s, self.k3, self.r, self.sigma, self.t);
+        // Calculate the price of the short call option with strike price `params3.k`.
+        let call_price1 = self.model.call_price(&self.params3);
 
-        // Calculate the price of the long call option with strike price `k4`.
-        let call_price2 = self
-            .model
-            .call_price(self.s, self.k4, self.r, self.sigma, self.t);
+        // Calculate the price of the long call option with strike price `params4.k`.
+        let call_price2 = self.model.call_price(&self.params4);
 
         // The total price of the Iron Condor strategy is the sum of the price differences of the puts and calls.
         put_price1 - put_price2 + call_price1 - call_price2

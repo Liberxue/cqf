@@ -1,4 +1,4 @@
-use crate::models::OptionPricingModel;
+use crate::models::{OptionParameters, OptionPricingModel};
 use crate::strategies::OptionStrategy;
 
 /// Represents a calendar spread option strategy.
@@ -10,23 +10,11 @@ pub struct CalendarSpread<'a, T: OptionPricingModel> {
     /// The option pricing model used to price the options.
     pub model: &'a T,
 
-    /// The current price of the underlying asset.
-    pub s: f64,
+    /// The parameters for the near-term call option.
+    pub near_params: OptionParameters,
 
-    /// The strike price of the call options.
-    pub k: f64,
-
-    /// The risk-free interest rate (annualized).
-    pub r: f64,
-
-    /// The volatility of the underlying asset (annualized).
-    pub sigma: f64,
-
-    /// The time to maturity of the near-term call option (in years).
-    pub t1: f64,
-
-    /// The time to maturity of the far-term call option (in years).
-    pub t2: f64,
+    /// The parameters for the far-term call option.
+    pub far_params: OptionParameters,
 }
 
 impl<'a, T: OptionPricingModel> CalendarSpread<'a, T> {
@@ -35,25 +23,17 @@ impl<'a, T: OptionPricingModel> CalendarSpread<'a, T> {
     /// # Arguments
     ///
     /// * `model` - The option pricing model to be used.
-    /// * `s` - The current price of the underlying asset.
-    /// * `k` - The strike price of the call options.
-    /// * `r` - The risk-free interest rate.
-    /// * `sigma` - The volatility of the underlying asset.
-    /// * `t1` - The time to maturity of the near-term call option.
-    /// * `t2` - The time to maturity of the far-term call option.
+    /// * `near_params` - The parameters for the near-term call option.
+    /// * `far_params` - The parameters for the far-term call option.
     ///
     /// # Returns
     ///
     /// Returns a new instance of `CalendarSpread`.
-    pub fn new(model: &'a T, s: f64, k: f64, r: f64, sigma: f64, t1: f64, t2: f64) -> Self {
+    pub fn new(model: &'a T, near_params: OptionParameters, far_params: OptionParameters) -> Self {
         Self {
             model,
-            s,
-            k,
-            r,
-            sigma,
-            t1,
-            t2,
+            near_params,
+            far_params,
         }
     }
 }
@@ -80,16 +60,26 @@ impl<'a, T: OptionPricingModel> OptionStrategy for CalendarSpread<'a, T> {
     /// use crate::models::BlackScholesModel;
     /// use crate::strategies::CalendarSpread;
     /// let model = BlackScholesModel;
-    /// let spread = CalendarSpread::new(&model, 100.0, 100.0, 0.05, 0.2, 0.1, 0.5);
+    /// let near_params = OptionParameters {
+    ///     s: 100.0,
+    ///     k: 100.0,
+    ///     r: 0.05,
+    ///     sigma: 0.2,
+    ///     t: 0.1,
+    /// };
+    /// let far_params = OptionParameters {
+    ///     s: 100.0,
+    ///     k: 100.0,
+    ///     r: 0.05,
+    ///     sigma: 0.2,
+    ///     t: 0.5,
+    /// };
+    /// let spread = CalendarSpread::new(&model, near_params, far_params);
     /// let price = spread.price();
     /// println!("Calendar Spread Price: {}", price);
     fn price(&self) -> f64 {
-        let near_leg = self
-            .model
-            .call_price(self.s, self.k, self.r, self.sigma, self.t1);
-        let far_leg = self
-            .model
-            .call_price(self.s, self.k, self.r, self.sigma, self.t2);
+        let near_leg = self.model.call_price(&self.near_params);
+        let far_leg = self.model.call_price(&self.far_params);
 
         // Calculate the price of the calendar spread
         far_leg - near_leg

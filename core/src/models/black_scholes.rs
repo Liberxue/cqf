@@ -1,4 +1,4 @@
-use crate::models::OptionPricingModel;
+use crate::models::{OptionParameters, OptionPricingModel};
 
 /// A Black-Scholes model for pricing European call and put options.
 /// ref: https://en.wikipedia.org/wiki/Black–Scholes_model
@@ -9,134 +9,116 @@ impl OptionPricingModel for BlackScholesModel {
     ///
     /// # Arguments
     ///
-    /// * `s` - The current stock price.
-    /// * `k` - The strike price of the option.
-    /// * `r` - The risk-free interest rate (annualized).
-    /// * `sigma` - The volatility of the stock (annualized).
-    /// * `t` - The time to maturity in years.
+    /// * `params` - The parameters for the option.
     ///
     /// # Returns
     ///
     /// Returns the price of the European call option.
-    fn call_price(&self, s: f64, k: f64, r: f64, sigma: f64, t: f64) -> f64 {
-        let d1 = (1.0 / (sigma * t.sqrt())) * ((s / k).ln() + (r + 0.5 * sigma.powi(2)) * t);
-        let d2 = d1 - sigma * t.sqrt();
-        s * standard_normal_cdf(d1) - k * (-r * t).exp() * standard_normal_cdf(d2)
+    fn call_price(&self, params: &OptionParameters) -> f64 {
+        let d1 = (1.0 / (params.sigma * params.t.sqrt()))
+            * ((params.s / params.k).ln() + (params.r + 0.5 * params.sigma.powi(2)) * params.t);
+        let d2 = d1 - params.sigma * params.t.sqrt();
+        params.s * standard_normal_cdf(d1)
+            - params.k * (-params.r * params.t).exp() * standard_normal_cdf(d2)
     }
 
     /// Calculates the price of a European put option using the Black-Scholes formula.
     ///
     /// # Arguments
     ///
-    /// * `s` - The current stock price.
-    /// * `k` - The strike price of the option.
-    /// * `r` - The risk-free interest rate (annualized).
-    /// * `sigma` - The volatility of the stock (annualized).
-    /// * `t` - The time to maturity in years.
+    /// * `params` - The parameters for the option.
     ///
     /// # Returns
     ///
     /// Returns the price of the European put option.
-    fn put_price(&self, s: f64, k: f64, r: f64, sigma: f64, t: f64) -> f64 {
-        let d1 = (1.0 / (sigma * t.sqrt())) * ((s / k).ln() + (r + 0.5 * sigma.powi(2)) * t);
-        let d2 = d1 - sigma * t.sqrt();
-        k * (-r * t).exp() * standard_normal_cdf(-d2) - s * standard_normal_cdf(-d1)
+    fn put_price(&self, params: &OptionParameters) -> f64 {
+        let d1 = (1.0 / (params.sigma * params.t.sqrt()))
+            * ((params.s / params.k).ln() + (params.r + 0.5 * params.sigma.powi(2)) * params.t);
+        let d2 = d1 - params.sigma * params.t.sqrt();
+        params.k * (-params.r * params.t).exp() * standard_normal_cdf(-d2)
+            - params.s * standard_normal_cdf(-d1)
     }
 
-    /// Calculates the Delta of a European call option.
+    /// Calculates the Delta of the option using the Black-Scholes formula.
     ///
     /// # Arguments
     ///
-    /// * `s` - The current stock price.
-    /// * `k` - The strike price of the option.
-    /// * `r` - The risk-free interest rate (annualized).
-    /// * `sigma` - The volatility of the stock (annualized).
-    /// * `t` - The time to maturity in years.
+    /// * `params` - The parameters for the option.
     ///
     /// # Returns
     ///
-    /// Returns the Delta of the European call option.
-    fn delta(&self, s: f64, k: f64, r: f64, sigma: f64, t: f64) -> f64 {
-        let d1 = (1.0 / (sigma * t.sqrt())) * ((s / k).ln() + (r + 0.5 * sigma.powi(2)) * t);
+    /// Returns the Delta of the option.
+    fn delta(&self, params: &OptionParameters) -> f64 {
+        let d1 = (1.0 / (params.sigma * params.t.sqrt()))
+            * ((params.s / params.k).ln() + (params.r + 0.5 * params.sigma.powi(2)) * params.t);
         standard_normal_cdf(d1)
     }
 
-    /// Calculates the Gamma of a European call option.
+    /// Calculates the Gamma of the option using the Black-Scholes formula.
     ///
     /// # Arguments
     ///
-    /// * `s` - The current stock price.
-    /// * `k` - The strike price of the option.
-    /// * `r` - The risk-free interest rate (annualized).
-    /// * `sigma` - The volatility of the stock (annualized).
-    /// * `t` - The time to maturity in years.
+    /// * `params` - The parameters for the option.
     ///
     /// # Returns
     ///
-    /// Returns the Gamma of the European call option.
-    fn gamma(&self, s: f64, k: f64, r: f64, sigma: f64, t: f64) -> f64 {
-        let d1 = (1.0 / (sigma * t.sqrt())) * ((s / k).ln() + (r + 0.5 * sigma.powi(2)) * t);
+    /// Returns the Gamma of the option.
+    fn gamma(&self, params: &OptionParameters) -> f64 {
+        let d1 = (1.0 / (params.sigma * params.t.sqrt()))
+            * ((params.s / params.k).ln() + (params.r + 0.5 * params.sigma.powi(2)) * params.t);
         let normal_pdf = (1.0 / (2.0 * std::f64::consts::PI).sqrt()) * (-0.5 * d1.powi(2)).exp();
-        normal_pdf / (s * sigma * t.sqrt())
+        normal_pdf / (params.s * params.sigma * params.t.sqrt())
     }
 
-    /// Calculates the Vega of a European call option.
+    /// Calculates the Vega of the option using the Black-Scholes formula.
     ///
     /// # Arguments
     ///
-    /// * `s` - The current stock price.
-    /// * `k` - The strike price of the option.
-    /// * `r` - The risk-free interest rate (annualized).
-    /// * `sigma` - The volatility of the stock (annualized).
-    /// * `t` - The time to maturity in years.
+    /// * `params` - The parameters for the option.
     ///
     /// # Returns
     ///
-    /// Returns the Vega of the European call option.
-    fn vega(&self, s: f64, k: f64, r: f64, sigma: f64, t: f64) -> f64 {
-        let d1 = (1.0 / (sigma * t.sqrt())) * ((s / k).ln() + (r + 0.5 * sigma.powi(2)) * t);
+    /// Returns the Vega of the option.
+    fn vega(&self, params: &OptionParameters) -> f64 {
+        let d1 = (1.0 / (params.sigma * params.t.sqrt()))
+            * ((params.s / params.k).ln() + (params.r + 0.5 * params.sigma.powi(2)) * params.t);
         let normal_pdf = (1.0 / (2.0 * std::f64::consts::PI).sqrt()) * (-0.5 * d1.powi(2)).exp();
-        s * normal_pdf * t.sqrt()
+        params.s * normal_pdf * params.t.sqrt()
     }
 
-    /// Calculates the Theta of a European call option.
+    /// Calculates the Theta of the option using the Black-Scholes formula.
     ///
     /// # Arguments
     ///
-    /// * `s` - The current stock price.
-    /// * `k` - The strike price of the option.
-    /// * `r` - The risk-free interest rate (annualized).
-    /// * `sigma` - The volatility of the stock (annualized).
-    /// * `t` - The time to maturity in years.
+    /// * `params` - The parameters for the option.
     ///
     /// # Returns
     ///
-    /// Returns the Theta of the European call option.
-    fn theta(&self, s: f64, k: f64, r: f64, sigma: f64, t: f64) -> f64 {
-        let d1 = (1.0 / (sigma * t.sqrt())) * ((s / k).ln() + (r + 0.5 * sigma.powi(2)) * t);
-        let d2 = d1 - sigma * t.sqrt();
+    /// Returns the Theta of the option.
+    fn theta(&self, params: &OptionParameters) -> f64 {
+        let d1 = (1.0 / (params.sigma * params.t.sqrt()))
+            * ((params.s / params.k).ln() + (params.r + 0.5 * params.sigma.powi(2)) * params.t);
+        let d2 = d1 - params.sigma * params.t.sqrt();
         let normal_pdf = (1.0 / (2.0 * std::f64::consts::PI).sqrt()) * (-0.5 * d1.powi(2)).exp();
-        let theta_call = -((s * normal_pdf * sigma) / (2.0 * t.sqrt())) - r * k * (-r * t).exp() * standard_normal_cdf(d2);
-        theta_call / 365.0  // Annualize to daily
+        let theta_call = -((params.s * normal_pdf * params.sigma) / (2.0 * params.t.sqrt()))
+            - params.r * params.k * (-params.r * params.t).exp() * standard_normal_cdf(d2);
+        theta_call / 365.0 // Annualize to daily
     }
 
-    /// Calculates the Rho of a European call option.
+    /// Calculates the Rho of the option using the Black-Scholes formula.
     ///
     /// # Arguments
     ///
-    /// * `s` - The current stock price.
-    /// * `k` - The strike price of the option.
-    /// * `r` - The risk-free interest rate (annualized).
-    /// * `sigma` - The volatility of the stock (annualized).
-    /// * `t` - The time to maturity in years.
+    /// * `params` - The parameters for the option.
     ///
     /// # Returns
     ///
-    /// Returns the Rho of the European call option.
-    fn rho(&self, s: f64, k: f64, r: f64, sigma: f64, t: f64) -> f64 {
-        let d1 = (1.0 / (sigma * t.sqrt())) * ((s / k).ln() + (r + 0.5 * sigma.powi(2)) * t);
-        let d2 = d1 - sigma * t.sqrt();
-        k * t * (-r * t).exp() * standard_normal_cdf(d2) / 100.0
+    /// Returns the Rho of the option.
+    fn rho(&self, params: &OptionParameters) -> f64 {
+        let d1 = (1.0 / (params.sigma * params.t.sqrt()))
+            * ((params.s / params.k).ln() + (params.r + 0.5 * params.sigma.powi(2)) * params.t);
+        let d2 = d1 - params.sigma * params.t.sqrt();
+        params.k * params.t * (-params.r * params.t).exp() * standard_normal_cdf(d2) / 100.0
     }
 }
 
