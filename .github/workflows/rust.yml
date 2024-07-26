@@ -19,8 +19,7 @@ jobs:
           override: true
 
       - name: Check
-        run: cargo  check  --workspace --verbose
+        run: cargo check --workspace --verbose
 
       - name: Run tests
         run: cargo test --workspace --verbose
-
