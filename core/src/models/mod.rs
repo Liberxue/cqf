@@ -5,7 +5,7 @@ pub mod monte_carlo;
 pub use binomial_tree::BinomialTreeModel;
 pub use black_scholes::BlackScholesModel;
 pub use monte_carlo::MonteCarloModel;
-/// Parameters for option pricing models.  ref: https://www.macroption.com/option-greeks-excel/
+/// Parameters for option pricing models
 ///
 /// # Fields
 ///
@@ -21,8 +21,6 @@ pub struct OptionParameters {
     pub r: f64,
     pub sigma: f64,
     pub t: f64,
-    //  pub steps: Option<usize>,  // BinomialTreeModel
-    //  pub is_call: Option<bool>, // BinomialTreeModel
 }
 
 /// A trait for option pricing models.

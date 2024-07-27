@@ -1,7 +1,7 @@
 use crate::models::{OptionParameters, OptionPricingModel};
 
 /// A Black-Scholes model for pricing European call and put options.
-/// ref: https://en.wikipedia.org/wiki/Black–Scholes_model
+/// ref:<https://en.wikipedia.org/wiki/Black–Scholes_model>
 pub struct BlackScholesModel;
 
 impl OptionPricingModel for BlackScholesModel {
