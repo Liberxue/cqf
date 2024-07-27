@@ -1,8 +1,11 @@
+pub mod binomial_tree;
 pub mod black_scholes;
 pub mod monte_carlo;
+
+pub use binomial_tree::BinomialTreeModel;
 pub use black_scholes::BlackScholesModel;
 pub use monte_carlo::MonteCarloModel;
-/// Parameters for option pricing models.  ref: https://www.macroption.com/option-greeks-excel/
+/// Parameters for option pricing models
 ///
 /// # Fields
 ///
