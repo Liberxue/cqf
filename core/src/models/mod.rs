@@ -1,10 +1,13 @@
 pub mod binomial_tree;
 pub mod black_scholes;
+pub mod garch;
 pub mod monte_carlo;
 
 pub use binomial_tree::BinomialTreeModel;
 pub use black_scholes::BlackScholesModel;
+pub use garch::GarchModel;
 pub use monte_carlo::MonteCarloModel;
+
 /// Parameters for option pricing models
 ///
 /// # Fields

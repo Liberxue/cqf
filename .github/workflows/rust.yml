@@ -2,7 +2,17 @@ name: Rust
 
 on:
   push:
+    branches: [master]
+    paths-ignore:
+      - "**/*.md"
   pull_request:
+    types: [opened, synchronize]
+    paths-ignore:
+      - "**/*.md"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.ref_name != 'master' }}
 
 jobs:
   build:
