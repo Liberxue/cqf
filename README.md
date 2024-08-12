@@ -196,5 +196,5 @@ fn test_dance() {
 
 # Contributing
 
-Contributions are welcome! [Please open an issue](https://github.com/Liberxue/cqf/issues/new) or [submit PR ] (https://github.com/Liberxue/cqf/pulls) for any improvements or new features.
+Contributions are welcome! [Please open an issue](https://github.com/Liberxue/cqf/issues/new) or [submit PR ](https://github.com/Liberxue/cqf/pulls) for any improvements or new features.
 

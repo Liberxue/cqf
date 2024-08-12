@@ -5,6 +5,8 @@ use crate::models::{OptionParameters, OptionPricingModel};
 pub struct BinomialTreeModel {
     /// Number of steps in the binomial tree model.
     pub steps: usize,
+    /// Epsilon value for numerical differentiation.
+    pub epsilon: f64,
 }
 
 enum OptionType {
@@ -13,13 +15,14 @@ enum OptionType {
 }
 
 impl BinomialTreeModel {
-    /// Creates a new `BinomialTreeModel` with a specified number of steps.
+    /// Creates a new `BinomialTreeModel` with a specified number of steps and epsilon.
     ///
     /// # Arguments
     ///
     /// * `steps` - Number of steps in the binomial tree model.
-    pub fn new(steps: usize) -> Self {
-        Self { steps }
+    /// * `epsilon` - Epsilon value for numerical differentiation.
+    pub fn new(steps: usize, epsilon: f64) -> Self {
+        Self { steps, epsilon }
     }
 
     /// Initializes the prices vector for call or put options.
@@ -49,6 +52,7 @@ impl BinomialTreeModel {
             })
             .collect()
     }
+
     /// Performs backward induction to calculate option price.
     ///
     /// # Arguments
@@ -78,7 +82,10 @@ impl BinomialTreeModel {
 
 impl Default for BinomialTreeModel {
     fn default() -> Self {
-        Self { steps: 100 } // Default number of steps is 100
+        Self {
+            steps: 100,
+            epsilon: 1e-5,
+        } // Default number of steps is 100 and epsilon is 1e-5
     }
 }
 
@@ -130,11 +137,6 @@ impl OptionPricingModel for BinomialTreeModel {
             s: params.s * u,
             ..params.clone()
         };
-        let params = OptionParameters {
-            s: params.s * d,
-            ..params.clone()
-        };
-
         let down_params = OptionParameters {
             s: params.s * d,
             ..params.clone()
@@ -172,6 +174,7 @@ impl OptionPricingModel for BinomialTreeModel {
 
         (delta_up - delta_down) / (0.5 * params.s * (u - d))
     }
+
     /// Calculates the theta of the option using the binomial tree model.
     ///
     /// # Arguments
@@ -182,16 +185,16 @@ impl OptionPricingModel for BinomialTreeModel {
     ///
     /// The calculated theta.
     fn theta(&self, params: &OptionParameters) -> f64 {
-        let epsilon = 1e-5;
         let new_params = OptionParameters {
-            t: params.t - epsilon,
+            t: params.t - self.epsilon,
             ..params.clone()
         };
         let call_price_t1 = self.call_price(params);
         let call_price_t2 = self.call_price(&new_params);
 
-        (call_price_t2 - call_price_t1) / epsilon
+        (call_price_t2 - call_price_t1) / self.epsilon
     }
+
     /// Calculates the vega of the option using the binomial tree model.
     ///
     /// # Arguments
@@ -200,17 +203,15 @@ impl OptionPricingModel for BinomialTreeModel {
     ///
     /// # Returns
     ///
-    /// The calcula           ted vega.
+    /// The calculated vega.
     fn vega(&self, params: &OptionParameters) -> f64 {
-        let epsilon = 1e-5;
-
         let call_price_sigma1 = self.call_price(params);
         let call_price_sigma2 = self.call_price(&OptionParameters {
-            sigma: params.sigma + epsilon,
+            sigma: params.sigma + self.epsilon,
             ..params.clone()
         });
 
-        (call_price_sigma2 - call_price_sigma1) / epsilon
+        (call_price_sigma2 - call_price_sigma1) / self.epsilon
     }
 
     /// Calculates the rho of the option using the binomial tree model.
@@ -223,14 +224,14 @@ impl OptionPricingModel for BinomialTreeModel {
     ///
     /// The calculated rho.
     fn rho(&self, params: &OptionParameters) -> f64 {
-        let epsilon = 1e-5;
         let new_params = OptionParameters {
-            r: params.r + epsilon,
+            r: params.r + self.epsilon,
             ..params.clone()
         };
         let call_price_r1 = self.call_price(params);
         let call_price_r2 = self.call_price(&new_params);
 
-        (call_price_r2 - call_price_r1) / epsilon
+        (call_price_r2 - call_price_r1) / self.epsilon
     }
 }
+

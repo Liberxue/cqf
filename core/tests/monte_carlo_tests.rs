@@ -7,6 +7,7 @@ use core::models::{OptionParameters, OptionPricingModel};
 fn test_call_price() {
     let model = MonteCarloModel {
         simulations: 100000,
+        epsilon: 0.01,
     };
     let params = OptionParameters {
         s: 100.0,
@@ -23,6 +24,7 @@ fn test_call_price() {
 fn test_put_price() {
     let model = MonteCarloModel {
         simulations: 100000,
+        epsilon: 0.01,
     };
     let params = OptionParameters {
         s: 100.0,
@@ -34,3 +36,4 @@ fn test_put_price() {
     let put_price = model.put_price(&params);
     assert!((put_price - 5.57).abs() < 1.0);
 }
+

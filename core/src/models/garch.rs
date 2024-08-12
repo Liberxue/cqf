@@ -8,6 +8,8 @@ pub struct GarchModel {
     pub omega: f64,
     pub alpha: f64,
     pub beta: f64,
+    /// Epsilon value for numerical differentiation.
+    pub epsilon: f64,
 }
 
 impl GarchModel {
@@ -19,12 +21,13 @@ impl GarchModel {
     /// * `omega` - GARCH model parameter omega.
     /// * `alpha` - GARCH model parameter alpha.
     /// * `beta` - GARCH model parameter beta.
-    pub fn new(steps: usize, omega: f64, alpha: f64, beta: f64) -> Self {
+    pub fn new(steps: usize, omega: f64, alpha: f64, beta: f64, epsilon: f64) -> Self {
         Self {
             steps,
             omega,
             alpha,
             beta,
+            epsilon,
         }
     }
 }
@@ -36,6 +39,7 @@ impl Default for GarchModel {
             omega: 0.1,
             alpha: 0.1,
             beta: 0.8,
+            epsilon: 1e-5,
         }
     }
 }
@@ -217,7 +221,7 @@ impl OptionPricingModel for GarchModel {
     ///
     /// The calculated vega.
     fn vega(&self, params: &OptionParameters) -> f64 {
-        let epsilon = 1e-5;
+        let epsilon = self.epsilon;
         let new_params = OptionParameters {
             sigma: params.sigma + epsilon,
             ..params.clone()
@@ -238,7 +242,7 @@ impl OptionPricingModel for GarchModel {
     ///
     /// The calculated rho.
     fn rho(&self, params: &OptionParameters) -> f64 {
-        let epsilon = 1e-5;
+        let epsilon = self.epsilon;
         let new_params = OptionParameters {
             r: params.r + epsilon,
             ..params.clone()
@@ -250,3 +254,4 @@ impl OptionPricingModel for GarchModel {
         rho.max(0.0)
     }
 }
+

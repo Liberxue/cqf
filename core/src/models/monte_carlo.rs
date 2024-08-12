@@ -7,6 +7,9 @@ use rand_distr::StandardNormal;
 pub struct MonteCarloModel {
     /// The number of simulations to run for the Monte Carlo method.
     pub simulations: usize,
+
+    /// The epsilon value used for finite difference calculations in Greeks.
+    pub epsilon: f64,
 }
 
 impl OptionPricingModel for MonteCarloModel {
@@ -70,13 +73,12 @@ impl OptionPricingModel for MonteCarloModel {
     ///
     /// Returns the estimated Delta of the option.
     fn delta(&self, params: &OptionParameters) -> f64 {
-        let epsilon = 0.01;
         let mut new_params = params.clone();
-        new_params.s = params.s + epsilon;
+        new_params.s = params.s + self.epsilon;
         let price_up = self.call_price(&new_params);
-        new_params.s = params.s - epsilon;
+        new_params.s = params.s - self.epsilon;
         let price_down = self.call_price(&new_params);
-        (price_up - price_down) / (2.0 * epsilon)
+        (price_up - price_down) / (2.0 * self.epsilon)
     }
 
     /// Calculates the Gamma of the option using Monte Carlo simulation.
@@ -89,13 +91,12 @@ impl OptionPricingModel for MonteCarloModel {
     ///
     /// Returns the estimated Gamma of the option.
     fn gamma(&self, params: &OptionParameters) -> f64 {
-        let epsilon = 0.01;
         let mut new_params = params.clone();
-        new_params.s = params.s + epsilon;
+        new_params.s = params.s + self.epsilon;
         let delta_up = self.delta(&new_params);
-        new_params.s = params.s - epsilon;
+        new_params.s = params.s - self.epsilon;
         let delta_down = self.delta(&new_params);
-        (delta_up - delta_down) / (2.0 * epsilon)
+        (delta_up - delta_down) / (2.0 * self.epsilon)
     }
 
     /// Calculates the Vega of the option using Monte Carlo simulation.
@@ -108,13 +109,12 @@ impl OptionPricingModel for MonteCarloModel {
     ///
     /// Returns the estimated Vega of the option.
     fn vega(&self, params: &OptionParameters) -> f64 {
-        let epsilon = 0.01;
         let mut new_params = params.clone();
-        new_params.sigma = params.sigma + epsilon;
+        new_params.sigma = params.sigma + self.epsilon;
         let price_up = self.call_price(&new_params);
-        new_params.sigma = params.sigma - epsilon;
+        new_params.sigma = params.sigma - self.epsilon;
         let price_down = self.call_price(&new_params);
-        (price_up - price_down) / (2.0 * epsilon)
+        (price_up - price_down) / (2.0 * self.epsilon)
     }
 
     /// Calculates the Theta of the option using Monte Carlo simulation.
@@ -127,12 +127,12 @@ impl OptionPricingModel for MonteCarloModel {
     ///
     /// Returns the estimated Theta of the option.
     fn theta(&self, params: &OptionParameters) -> f64 {
-        let epsilon = 1.0 / 365.0; // One day
+        let day_epsilon = 1.0 / 365.0; // One day
         let mut new_params = params.clone();
         let price_now = self.call_price(params);
-        new_params.t = params.t - epsilon;
+        new_params.t = params.t - day_epsilon;
         let price_future = self.call_price(&new_params);
-        (price_future - price_now) / epsilon
+        (price_future - price_now) / day_epsilon
     }
 
     /// Calculates the Rho of the option using Monte Carlo simulation.
@@ -145,12 +145,12 @@ impl OptionPricingModel for MonteCarloModel {
     ///
     /// Returns the estimated Rho of the option.
     fn rho(&self, params: &OptionParameters) -> f64 {
-        let epsilon = 0.01;
         let mut new_params = params.clone();
-        new_params.r = params.r + epsilon;
+        new_params.r = params.r + self.epsilon;
         let price_up = self.call_price(&new_params);
-        new_params.r = params.r - epsilon;
+        new_params.r = params.r - self.epsilon;
         let price_down = self.call_price(&new_params);
-        (price_up - price_down) / (2.0 * epsilon)
+        (price_up - price_down) / (2.0 * self.epsilon)
     }
 }
+
