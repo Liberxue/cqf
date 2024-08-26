@@ -3,7 +3,10 @@
  
 [![](https://img.shields.io/badge/Rust-1.79.0+-blue)](https://releases.rs/docs/1.79.0)   
 
-[!cqf](./ui/cqf.gif)
+
+## CLI DEMO
+[<img src="./ui/cqf.gif" width="200%"/>](./ui/cqf.gif)
+
 
 ## Examples
 
