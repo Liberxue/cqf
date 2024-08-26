@@ -16,5 +16,4 @@ license = "Apache-2.0"
 
 
 [dependencies]
-ratatui = "0.28.0"
 

@@ -9,5 +9,3 @@ clap = { version = "4.0", features = ["derive"] }
 burn = { version = "0.13.2", features = ["train", "wgpu", "vision"] }
 core = { path = "../core" }
 plotters = "0.3.6"
-ratatui = "0.28.0"
-crossterm = "0.28.1"
