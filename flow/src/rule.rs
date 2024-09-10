@@ -4,8 +4,8 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
-use thiserror::Error;
 use std::path::PathBuf;
+use thiserror::Error;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DecisionRef {
@@ -85,7 +85,8 @@ pub struct RulesReader;
 impl RulesReader {
     pub fn read_rules(path: &str) -> Result<Vec<Rule>, ReaderError> {
         let path = PathBuf::from(path);
-        let extension = path.extension()
+        let extension = path
+            .extension()
             .and_then(std::ffi::OsStr::to_str)
             .ok_or_else(|| ReaderError::UnknownExtension(path.to_string_lossy().to_string()))?;
 
