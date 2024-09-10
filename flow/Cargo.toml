@@ -1,0 +1,26 @@
+[package]
+name = "flow"
+edition.workspace = true
+version.workspace = true
+readme.workspace = true
+license.workspace = true
+
+
+[lib]
+name = "flow"
+path = "src/lib.rs"
+
+
+[dependencies]
+tokio = { version = "1.0", features = ["full"] }
+clap = { version = "4.0", features = ["derive"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "^1.0"
+thiserror = "1.0.63"
+zen-engine = "0.26.0"
+zen-expression = "0.26.0"
+csv = "1.1"
+
+[dev-dependencies]
+tokio = { version = "1.0", features = ["full", "test-util"] }
+tempfile = "3.2"

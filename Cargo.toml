@@ -6,7 +6,7 @@ edition = "2021"
 [workspace]
 resolver = "2"
 
-members = ["core", "bench", "cli", "providers"]
+members = ["core", "bench", "cli", "providers", "flow"]
 
 [workspace.package]
 edition = "2021"
